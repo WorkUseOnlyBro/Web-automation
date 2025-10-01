@@ -324,3 +324,118 @@ test('launch custom chrome and run GraphQL', async ({ browser }) => {
 
   await page.close();
 });
+
+----------------------
+import { test as base, expect } from '@playwright/test';
+import { chromium } from 'playwright';
+
+/**
+ * Run a GraphQL POST from within the page context.
+ * - If `attributes` is provided, it replaces a placeholder token `__ATTRS__` in `query`.
+ * - Automatically attaches cookies; tries to pull a CSRF token from common locations.
+ */
+async function runGraphQLInPage(page, {
+  endpoint,          // '/graphql' or full URL
+  operationName,     // e.g., 'GetVuln'
+  query,             // GraphQL text; can contain the token __ATTRS__ for dynamic selections
+  variables = {},    // object for $variables
+  attributes = [],   // ['id','severity','cve', ...] -> injected where __ATTRS__ appears
+  extraHeaders = {}  // if you must pass special headers (e.g., X-Tenable-... )
+}) {
+  const selection = attributes?.length ? attributes.join('\n        ') : '';
+  const finalQuery = attributes?.length ? query.replace('__ATTRS__', selection) : query;
+
+  return await page.evaluate(async ({ endpoint, operationName, finalQuery, variables, extraHeaders }) => {
+    // Heuristics for CSRF token locations (adjust if your app differs)
+    const csrf =
+      document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
+      document.querySelector('meta[name="csrfToken"]')?.getAttribute('content') ||
+      document.querySelector('input[name="csrfmiddlewaretoken"]')?.value ||
+      null;
+
+    const headers = {
+      'Content-Type': 'application/json',
+      ...extraHeaders
+    };
+    if (csrf) headers['X-CSRF-Token'] = csrf;
+
+    const resp = await fetch(endpoint, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers,
+      body: JSON.stringify({ operationName, query: finalQuery, variables })
+    });
+
+    const text = await resp.text();
+    let json;
+    try { json = JSON.parse(text); } catch { /* non-JSON error */ }
+
+    return {
+      httpOk: resp.ok,
+      status: resp.status,
+      data: json?.data ?? null,
+      errors: json?.errors ?? (resp.ok ? null : [{ message: text }])
+    };
+  }, { endpoint, operationName, finalQuery, variables, extraHeaders });
+}
+
+// ---------- keep your custom Chrome fixture ----------
+const test = base.extend({
+  browser: async ({}, use) => {
+    const browser = await chromium.launch({
+      headless: false,
+      executablePath: 'C:\\Users\\YourName\\CustomChrome\\chrome.exe'
+    });
+    await use(browser);
+    await browser.close();
+  },
+});
+
+// ------------- example usage -------------
+test('GraphQL with dynamic attributes', async ({ browser }) => {
+  const page = await browser.newPage();
+
+  // If you’re already authenticated via storageState or existing session, you can skip login
+  await page.goto('https://cloud.tenable.com'); // base origin for relative /graphql
+  await page.waitForLoadState('networkidle');
+
+  // Example: the query contains a token __ATTRS__ where we inject fields from `attributes`
+  const queryTemplate = `
+    query GetVuln($id: ID!) {
+      vulnerability(id: $id) {
+        __ATTRS__
+      }
+    }
+  `;
+
+  const result = await runGraphQLInPage(page, {
+    endpoint: '/graphql',            // or 'https://cloud.tenable.com/graphql'
+    operationName: 'GetVuln',
+    query: queryTemplate,
+    variables: { id: 'REPLACE_ME' }, // your plugin/issue ID or UUID
+    attributes: [
+      'id',
+      'cve',
+      'severity',
+      'cvss { base score vector }',
+      'description',
+      'remediation',
+      'publishedDate',
+      'lastSeen',
+      'assets { id hostname ip }',
+      'references',
+      'exploitable'
+    ]
+    // extraHeaders: { 'X-Tenable-Whatever': '...' } // if needed
+  });
+
+  // Basic assertions / diagnostics
+  expect(result.httpOk, `HTTP ${result.status} ${JSON.stringify(result.errors)}`).toBeTruthy();
+  expect(result.errors, `GraphQL errors: ${JSON.stringify(result.errors, null, 2)}`).toBeFalsy();
+  expect(result.data?.vulnerability).toBeTruthy();
+
+  console.log('Vuln detail:', result.data.vulnerability);
+
+  await page.close();
+});
+
