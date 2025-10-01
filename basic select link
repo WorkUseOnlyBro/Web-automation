@@ -118,3 +118,19 @@ test('open with custom chrome', async () => {
   await browser.close();
 });
 
+------------------------------------------------
+const { chromium } = require('playwright');
+
+(async () => {
+  const browser = await chromium.launch({
+    headless: false,
+    executablePath: "C:\\Users\\YourName\\UnblockedChrome\\chrome.exe" // <-- Your custom path
+  });
+
+  const page = await browser.newPage();
+  await page.goto('https://example.com');
+  await page.click('text=More information');
+  await page.waitForLoadState('load');
+  console.log('Custom Chrome launched successfully');
+  await browser.close();
+})();
