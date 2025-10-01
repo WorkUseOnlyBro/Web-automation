@@ -222,3 +222,105 @@ export default defineConfig({
     }
   ]
 });
+-----------------------------------------
+graphql 
+import { test as base, expect } from '@playwright/test';
+import { chromium } from 'playwright';
+
+// override the browser fixture to use your Chrome
+const test = base.extend({
+  browser: async ({}, use) => {
+    const browser = await chromium.launch({
+      headless: false,
+      executablePath: 'C:\\Users\\YourName\\CustomChrome\\chrome.exe'
+    });
+    await use(browser);
+    await browser.close();
+  },
+});
+
+test('launch custom chrome and run GraphQL', async ({ browser }) => {
+  const page = await browser.newPage();
+
+  // assume logged in already (cookie/session present); if not, load page and login first
+  await page.goto('https://cloud.tenable.com/'); // or appropriate base URL
+  await page.waitForLoadState('networkidle');
+
+  // --- Option A: run GraphQL from the page (uses page cookies / auth automatically) ---
+  const gqlEndpoint = '/graphql'; // relative path uses same origin; or full URL 'https://cloud.tenable.com/graphql'
+  const gqlQuery = `
+    query GetVuln($id: ID!) {
+      vulnerability(id: $id) {
+        id
+        cve
+        severity
+        description
+        remediation
+        assets { id hostname ip }
+      }
+    }
+  `;
+  const gqlVariables = { id: 'SAMPLE_PLUGIN_ID_OR_UUID' };
+
+  const result = await page.evaluate(
+    async (endpoint, query, variables) => {
+      // attempt to deduce CSRF token if needed (common locations)
+      const csrf =
+        document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+        || document.querySelector('input[name="csrfmiddlewaretoken"]')?.value
+        || null;
+
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      if (csrf) headers['X-CSRF-Token'] = csrf;
+
+      const resp = await fetch(endpoint, {
+        method: 'POST',
+        credentials: 'same-origin', // important to send cookies
+        headers,
+        body: JSON.stringify({ query, variables }),
+      });
+
+      if (!resp.ok) {
+        return { ok: false, status: resp.status, text: await resp.text() };
+      }
+      return { ok: true, json: await resp.json() };
+    },
+    gqlEndpoint,
+    gqlQuery,
+    gqlVariables
+  );
+
+  console.log('GraphQL (page) result:', result);
+  expect(result.ok).toBeTruthy();
+
+  // --- Option B: Node-side request using cookies from the page (use when you need direct control) ---
+  // Get cookies for the GraphQL host from the page context
+  const cookies = await page.context().cookies();
+  // Build cookie header
+  const cookieHeader = cookies.map(c => `${c.name}=${c.value}`).join('; ');
+
+  // Create a request context that includes the cookie header (and any custom headers)
+  const request = await browser.newContext().request; // quick access to Request API via new context
+
+  // Note: Some Playwright versions prefer playwright.request.newContext(); using the context.request is OK here.
+  const nodeResp = await request.post('https://cloud.tenable.com/graphql', {
+    headers: {
+      'Content-Type': 'application/json',
+      'Cookie': cookieHeader,
+      // add other headers if required, e.g. 'X-CSRF-Token': '...'
+    },
+    data: { query: gqlQuery, variables: gqlVariables },
+  });
+
+  if (!nodeResp.ok()) {
+    const text = await nodeResp.text();
+    console.error('GraphQL (node) failed', nodeResp.status(), text);
+  } else {
+    const json = await nodeResp.json();
+    console.log('GraphQL (node) json:', json);
+  }
+
+  await page.close();
+});
