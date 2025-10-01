@@ -205,3 +205,20 @@ test('launch custom chrome', async ({ browser }) => {
   await page.click('text=More information');
   await page.waitForLoadState('load');
 });
+---------------------
+import { defineConfig } from '@playwright/test';
+
+export default defineConfig({
+  testDir: './tests',
+  use: {
+    headless: false
+  },
+  projects: [
+    {
+      name: 'custom-chrome',
+      use: {
+        browserName: 'chromium'
+      }
+    }
+  ]
+});
