@@ -31,3 +31,30 @@ test('open with custom chrome', async () => {
         await page.goto('place holder');
        // await browser.close();
 });
+
+-------------------------------------
+const { test } = require('@playwright/test');
+const playwright = require('playwright');
+
+test('open with custom chrome and click link', async () => {
+  // Launch Chrome explicitly
+  const browser = await playwright.chromium.launch({
+    headless: false,
+    executablePath: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+  });
+
+  const page = await browser.newPage();
+
+  // Navigate
+  await page.goto('https://example.com');
+
+  // Click a link (by text or selector)
+  await page.click('text=More information');
+
+  // Wait for navigation
+  await page.waitForLoadState('load');
+
+  console.log('Link clicked and page loaded');
+
+  await browser.close();
+});
