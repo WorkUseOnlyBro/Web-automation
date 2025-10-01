@@ -134,3 +134,25 @@ const { chromium } = require('playwright');
   console.log('Custom Chrome launched successfully');
   await browser.close();
 })();
+-------------------------------------------
+import { test as base, expect } from '@playwright/test';
+import { chromium } from 'playwright';
+
+// Extend the test to override the browser fixture
+const test = base.extend({
+  browser: async ({}, use) => {
+    const browser = await chromium.launch({
+      headless: false,
+      executablePath: "C:\\Users\\YourName\\CustomChrome\\chrome.exe"
+    });
+    await use(browser);
+    await browser.close();
+  }
+});
+
+test('should launch using custom Chrome', async ({ browser }) => {
+  const page = await browser.newPage();
+  await page.goto('https://example.com');
+  await page.click('text=More information');
+  await page.waitForLoadState('load');
+});
