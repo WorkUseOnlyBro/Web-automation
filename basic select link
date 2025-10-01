@@ -1,0 +1,20 @@
+import { chromium } from 'playwright';
+
+(async () => {
+  // Launch browser
+  const browser = await chromium.launch({ headless: false });
+  const page = await browser.newPage();
+
+  // Go to target page
+  await page.goto('https://example.com');
+
+  // Click a link by selector (e.g., anchor with text "More information")
+  await page.click('text=More information');
+
+  // Wait for navigation after clicking link
+  await page.waitForLoadState('load');
+
+  console.log('Link clicked and page loaded');
+
+  await browser.close();
+})();
