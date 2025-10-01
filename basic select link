@@ -18,3 +18,16 @@ import { chromium } from 'playwright';
 
   await browser.close();
 })();
+
+
+const { test } = require('@playwright/test');
+
+test('open with custom chrome', async () => {
+    const { chromium } = require('@playwright/test');
+        const browser = await chromium.launch ({
+            executablePath: "C:\Program Files\Google\Chrome\Application\chrome.exe"
+        });
+        const page = await browser.newPage();
+        await page.goto('place holder');
+       // await browser.close();
+});
