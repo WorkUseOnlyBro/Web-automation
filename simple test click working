@@ -1,0 +1,22 @@
+import { test as base, expect } from '@playwright/test';
+import { chromium } from 'playwright';
+
+// override the browser fixture to use your Chrome
+const test = base.extend({
+  browser: async ({}, use) => {
+    const browser = await chromium.launch({
+      headless: false,
+      executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
+    });
+    await use(browser);
+    await browser.close();
+  },
+});
+
+test('launch custom chrome', async ({ browser }) => {
+  const page = await browser.newPage();
+  await page.goto('');
+  await page.click('');
+  await page.waitForLoadState('load');
+  await page.click('');
+});
