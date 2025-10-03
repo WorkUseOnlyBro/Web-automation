@@ -1,0 +1,55 @@
+const { chromium } = require('playwright'); // or 'firefox' or 'webkit'
+
+(async () => {
+  const browser = await chromium.launch({ headless: false });
+  const context = await browser.newContext();
+
+  const page = await context.newPage();
+
+  // Step 1: Navigate to your site and wait for login to complete
+  await page.goto('https://your-site.com');
+
+  // Optional: wait for a selector that only appears after login
+  await page.waitForSelector('#some-dashboard-element');
+
+  // Step 2: Extract cookies or tokens
+  const cookies = await context.cookies();
+  const authCookie = cookies.find(c => c.name === 'auth' || c.name.includes('token'));
+
+  // Alternatively, try localStorage/sessionStorage if applicable
+  const token = await page.evaluate(() => {
+    return localStorage.getItem('token') || sessionStorage.getItem('token');
+  });
+
+  // Step 3: Make the GraphQL request inside the page context
+  const response = await page.evaluate(async ({ token }) => {
+    const graphqlEndpoint = '/graphql'; // Adjust if full URL needed
+
+    const query = `
+      query GetUserData($id: ID!) {
+        user(id: $id) {
+          name
+          email
+        }
+      }
+    `;
+
+    const variables = { id: "123" };
+
+    const res = await fetch(graphqlEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': token ? `Bearer ${token}` : ''
+      },
+      body: JSON.stringify({ query, variables }),
+    });
+
+    const data = await res.json();
+    return data;
+  }, { token });
+
+  console.log('GraphQL Response:', response);
+
+  await browser.close();
+})();
