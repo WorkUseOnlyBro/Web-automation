@@ -217,3 +217,30 @@ if (hitArray.length === 0) {
     console.log(`${i + 1}. ${hit.name || '(no name)'} (${hit.severity || 'N/A'})`);
   });
 }
+-------------------------------------------
+const hitsRaw = graphqlResponse?.data?.getOnPremVulnerabilities?.hits;
+
+// Normalize to array if needed
+let hitArray = [];
+
+if (Array.isArray(hitsRaw)) {
+  hitArray = hitsRaw;
+} else if (hitsRaw && typeof hitsRaw === 'object') {
+  hitArray = Object.values(hitsRaw);
+} else {
+  hitArray = [];
+}
+
+console.log(`Total hits detected: ${hitArray.length}`);
+console.log('Type of hits:', typeof hitsRaw);
+console.log('Keys:', Object.keys(hitsRaw || {}));
+
+// Now handle results
+if (hitArray.length === 0) {
+  console.log('No vulnerability records found.');
+} else {
+  console.log(`Found ${hitArray.length} vulnerabilities:`);
+  hitArray.forEach((hit, i) => {
+    console.log(`${i + 1}. ${hit.name || '(no name)'} (${hit.severity || 'N/A'})`);
+  });
+}
