@@ -1,0 +1,100 @@
+import { test as base, expect } from '@playwright/test';
+import { chromium } from 'playwright';
+
+// Override default browser fixture to launch custom Chrome
+const test = base.extend({
+  browser: async ({}, use) => {
+    const browser = await chromium.launch({
+      headless: false,
+      executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
+    });
+    await use(browser);
+    await browser.close();
+  }
+});
+
+// Define the actual test
+test('GraphQL request after login using custom Chrome', async ({ browser }) => {
+  const context = await browser.newContext();
+  const page = await context.newPage();
+
+  // --- Step 1: Go to site and wait for login to complete ---
+  await page.goto('webaddress');
+
+  // Wait for some element that confirms you're logged in
+  //await page.waitForSelector('#app-table'); // Customize this selector
+await page.waitForLoadState('networkidle');
+  // --- Step 2: Extract token/cookie ---
+  
+  const keys = await page.evaluate(() => Object.keys(localStorage));
+  console.log('LocalStorage Keys:', keys);
+  
+
+  const cookies = await context.cookies();
+  console.log('cookies:', cookies.map(c => c.name));
+  console.log('all cookie data:', cookies);
+  const authCookie = cookies.find(c => c.name = 'name');
+
+if (!authCookie) {
+  throw new Error('Auth token cookie not found.');
+}
+
+const token = authCookie.value;
+/*
+  const token = await page.evaluate(() => {
+    return localStorage.getItem('token') || sessionStorage.getItem('token');
+  });
+
+  if (!token) {
+    throw new Error('No token found in storage.');
+  }
+*/
+
+
+  // --- Step 3: Execute GraphQL query within page context ---
+  const graphqlResponse = await page.evaluate(async ({ token }) => {
+    const endpoint = 'google.com'; // Change to full URL if needed
+
+    const query = `
+ query myquery(
+
+        ) {
+
+          )
+        }
+    `;
+
+    const variables = {
+
+    };
+
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ query, variables })
+    });
+
+    const data = await res.json();
+    return data;
+  }, { token });
+
+  //console.log('GraphQL Response:', graphqlResponse);
+
+
+console.log('GraphQL Response:', graphqlResponse);
+
+const hits = graphqlResponse.data.getOnPremVulnerabilities.hits;
+if (hits.length === 0) {
+  console.log('No vulnerability records found.');
+} else {
+  console.log(`Found ${hits.length} vulnerabilities:`);
+  hits.forEach((hit, index) => {
+    console.log(`Hit ${index + 1}:`, hit);
+  }
+
+  
+expect(graphqlResponse.data.getOnPremVulnerabilities).toBeDefined();
+});
