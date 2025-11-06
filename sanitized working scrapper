@@ -358,3 +358,195 @@ CREATE TABLE dbo.vulnerabilities (
 );
 -----------------------------------------------
 Sha256IdAppCombo	AssociatedApps	ResourceName	Sha256Id	VIT	VulnAliases	VulnSummary	AIDEID	Source	ToolName	Src	Details	Summary	Href	InstanceId	UniqueID	ResolutionStatus	ResolutionStatusMarkedByMsId	ResolutionStatusMarkedByName	ResolutionStatusMarkedDate	SpecificRemediation	IsActive	AffectedPaths	AssignmentGroup	ITSMTeam	TimingDiscovered	TimingDiscoveredEpoch	ToolInitialDetectionDate	TimingResolved	TimingScanned	TimingAuthenticatedScanned	VulnDetails	VulnCategory	VulnGenericRemediation	VulnSeverity	SeverityOrder	RelatedCVEs	Environment	IsManaged	MarkedManagedOverrideByName	MarkedManagedOverrideByMsId	CVSS3Score	OrgName	OrgId	OSDetails	InsertionTimestamp	FirstInsertionTimestamp	SLACountdown	Questions	HasQuestions	Type	CommonID	LineOfBusiness	BusinessSegment	ApplicationName	IsBlocked	BlockedDate	InternalSlaDateEpoch	ExternalSlaDateEpoch	SlaDateEpoch	IsDeleted	ContestedReason	ContestedDescription	ContestedStepsTaken	ManagedBuckets	ManagedAIDEID	EndOfLife	DeviceType	ComputerName	HostName	DomainName	AssetType	BusinessServices	AssetTags	VulnName	AssetSha256Id	AssetCategory	AssetName	WebhookStatus	WebhookAssignedToMsId	WebhookAssignedToName	VulnerabilityIdentifier	VulnSha256Id	KnownExploited	HasActiveRiskRecord	IsUnsupportedOS	IsUnpatched	RiskRecords	OwningAskIdOverride	OwningAskIdOverrideByMsId	OwningAskIdOverrideByName	OwningAskIdOverrideCount	OwningAskIdOverrideDate	ModifiedBy	ManagedLastUpdated	OGAIDEID	TransferHistory	isRefreshed	processAs
+
+-------------------------------------------------------
+CREATE TABLE dbo.vulnerabilities (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+
+    Sha256IdAppCombo NVARCHAR(200) NULL,
+    AssociatedApps NVARCHAR(MAX) NULL,
+    ResourceName NVARCHAR(500) NULL,
+    Sha256Id NVARCHAR(200) NULL,
+    VIT NVARCHAR(100) NULL,
+    VulnAliases NVARCHAR(500) NULL,
+    VulnSummary NVARCHAR(MAX) NULL,
+    AIDEID NVARCHAR(100) NULL,
+    Source NVARCHAR(100) NULL,
+    ToolName NVARCHAR(100) NULL,
+    Src NVARCHAR(100) NULL,
+    Details NVARCHAR(MAX) NULL,
+    Summary NVARCHAR(MAX) NULL,
+    Href NVARCHAR(1000) NULL,
+    InstanceId NVARCHAR(200) NULL,
+    UniqueID NVARCHAR(200) NULL,
+    ResolutionStatus NVARCHAR(100) NULL,
+    ResolutionStatusMarkedByMsId NVARCHAR(200) NULL,
+    ResolutionStatusMarkedByName NVARCHAR(200) NULL,
+    ResolutionStatusMarkedDate DATETIME2 NULL,
+    SpecificRemediation NVARCHAR(MAX) NULL,
+    IsActive BIT NULL,
+    AffectedPaths NVARCHAR(MAX) NULL,
+    AssignmentGroup NVARCHAR(200) NULL,
+    ITSMTeam NVARCHAR(200) NULL,
+    TimingDiscovered DATETIME2 NULL,
+    TimingDiscoveredEpoch BIGINT NULL,
+    ToolInitialDetectionDate DATETIME2 NULL,
+    TimingResolved DATETIME2 NULL,
+    TimingScanned DATETIME2 NULL,
+    TimingAuthenticatedScanned DATETIME2 NULL,
+    VulnDetails NVARCHAR(MAX) NULL,
+    VulnCategory NVARCHAR(200) NULL,
+    VulnGenericRemediation NVARCHAR(MAX) NULL,
+    VulnSeverity NVARCHAR(50) NULL,
+    SeverityOrder INT NULL,
+    RelatedCVEs NVARCHAR(MAX) NULL,
+    Environment NVARCHAR(100) NULL,
+    IsManaged BIT NULL,
+    MarkedManagedOverrideByName NVARCHAR(200) NULL,
+    MarkedManagedOverrideByMsId NVARCHAR(200) NULL,
+    CVSS3Score FLOAT NULL,
+    OrgName NVARCHAR(200) NULL,
+    OrgId NVARCHAR(100) NULL,
+    OSDetails NVARCHAR(500) NULL,
+    InsertionTimestamp DATETIME2 NULL,
+    FirstInsertionTimestamp DATETIME2 NULL,
+    SLACountdown INT NULL,
+    Questions NVARCHAR(MAX) NULL,
+    HasQuestions BIT NULL,
+    Type NVARCHAR(100) NULL,
+    CommonID NVARCHAR(100) NULL,
+    LineOfBusiness NVARCHAR(200) NULL,
+    BusinessSegment NVARCHAR(200) NULL,
+    ApplicationName NVARCHAR(500) NULL,
+    IsBlocked BIT NULL,
+    BlockedDate DATETIME2 NULL,
+    InternalSlaDateEpoch BIGINT NULL,
+    ExternalSlaDateEpoch BIGINT NULL,
+    SlaDateEpoch BIGINT NULL,
+    IsDeleted BIT NULL,
+    ContestedReason NVARCHAR(500) NULL,
+    ContestedDescription NVARCHAR(MAX) NULL,
+    ContestedStepsTaken NVARCHAR(MAX) NULL,
+    ManagedBuckets NVARCHAR(MAX) NULL,
+    ManagedAIDEID NVARCHAR(200) NULL,
+    EndOfLife NVARCHAR(100) NULL,
+    DeviceType NVARCHAR(200) NULL,
+    ComputerName NVARCHAR(200) NULL,
+    HostName NVARCHAR(200) NULL,
+    DomainName NVARCHAR(200) NULL,
+    AssetType NVARCHAR(100) NULL,
+    BusinessServices NVARCHAR(MAX) NULL,
+    AssetTags NVARCHAR(MAX) NULL,
+    VulnName NVARCHAR(500) NULL,
+    AssetSha256Id NVARCHAR(200) NULL,
+    AssetCategory NVARCHAR(200) NULL,
+    AssetName NVARCHAR(500) NULL,
+    WebhookStatus NVARCHAR(100) NULL,
+    WebhookAssignedToMsId NVARCHAR(200) NULL,
+    WebhookAssignedToName NVARCHAR(200) NULL,
+    VulnerabilityIdentifier NVARCHAR(200) NULL,
+    VulnSha256Id NVARCHAR(200) NULL,
+    KnownExploited BIT NULL,
+    HasActiveRiskRecord BIT NULL,
+    IsUnsupportedOS BIT NULL,
+    IsUnpatched BIT NULL,
+    RiskRecords NVARCHAR(MAX) NULL,
+    OwningAskIdOverride NVARCHAR(200) NULL,
+    OwningAskIdOverrideByMsId NVARCHAR(200) NULL,
+    OwningAskIdOverrideByName NVARCHAR(200) NULL,
+    OwningAskIdOverrideCount INT NULL,
+    OwningAskIdOverrideDate DATETIME2 NULL,
+    ModifiedBy NVARCHAR(200) NULL,
+    ManagedLastUpdated DATETIME2 NULL,
+    OGAIDEID NVARCHAR(200) NULL,
+    TransferHistory NVARCHAR(MAX) NULL,
+    IsRefreshed BIT NULL,
+    ProcessAs NVARCHAR(100) NULL,
+
+    inserted_at DATETIME2 DEFAULT SYSUTCDATETIME()
+);
+---------------------------------------
+import sql from 'mssql';
+
+// ---------- SQL Server insert (structured columns, Windows Auth) ----------
+async function writeSqlServer(records: any[], config: any) {
+  if (!records.length) {
+    console.log('No records to write to SQL Server.');
+    return;
+  }
+
+  const pool = await sql.connect(config);
+
+  // Columns from your CSV in correct order
+  const columns = [
+    'Sha256IdAppCombo','AssociatedApps','ResourceName','Sha256Id','VIT','VulnAliases',
+    'VulnSummary','AIDEID','Source','ToolName','Src','Details','Summary','Href',
+    'InstanceId','UniqueID','ResolutionStatus','ResolutionStatusMarkedByMsId',
+    'ResolutionStatusMarkedByName','ResolutionStatusMarkedDate','SpecificRemediation',
+    'IsActive','AffectedPaths','AssignmentGroup','ITSMTeam','TimingDiscovered',
+    'TimingDiscoveredEpoch','ToolInitialDetectionDate','TimingResolved','TimingScanned',
+    'TimingAuthenticatedScanned','VulnDetails','VulnCategory','VulnGenericRemediation',
+    'VulnSeverity','SeverityOrder','RelatedCVEs','Environment','IsManaged',
+    'MarkedManagedOverrideByName','MarkedManagedOverrideByMsId','CVSS3Score','OrgName',
+    'OrgId','OSDetails','InsertionTimestamp','FirstInsertionTimestamp','SLACountdown',
+    'Questions','HasQuestions','Type','CommonID','LineOfBusiness','BusinessSegment',
+    'ApplicationName','IsBlocked','BlockedDate','InternalSlaDateEpoch',
+    'ExternalSlaDateEpoch','SlaDateEpoch','IsDeleted','ContestedReason',
+    'ContestedDescription','ContestedStepsTaken','ManagedBuckets','ManagedAIDEID',
+    'EndOfLife','DeviceType','ComputerName','HostName','DomainName','AssetType',
+    'BusinessServices','AssetTags','VulnName','AssetSha256Id','AssetCategory',
+    'AssetName','WebhookStatus','WebhookAssignedToMsId','WebhookAssignedToName',
+    'VulnerabilityIdentifier','VulnSha256Id','KnownExploited','HasActiveRiskRecord',
+    'IsUnsupportedOS','IsUnpatched','RiskRecords','OwningAskIdOverride',
+    'OwningAskIdOverrideByMsId','OwningAskIdOverrideByName','OwningAskIdOverrideCount',
+    'OwningAskIdOverrideDate','ModifiedBy','ManagedLastUpdated','OGAIDEID',
+    'TransferHistory','IsRefreshed','ProcessAs'
+  ];
+
+  const colList = columns.join(', ');
+  const paramList = columns.map(c => `@${c}`).join(', ');
+  const insertQuery = `
+    INSERT INTO dbo.vulnerabilities (${colList})
+    VALUES (${paramList});
+  `;
+
+  try {
+    const transaction = new sql.Transaction(pool);
+    await transaction.begin();
+
+    for (const record of records) {
+      const req = new sql.Request(transaction);
+      for (const col of columns) {
+        // Map directly to NVARCHAR(MAX) for simplicity; SQL will handle conversions
+        req.input(col, sql.NVarChar(sql.MAX), record[col] ?? null);
+      }
+      await req.query(insertQuery);
+    }
+
+    await transaction.commit();
+    console.log(`✅ SQL Server inserted ${records.length} rows`);
+  } catch (err) {
+    console.error('❌ SQL insert failed:', err);
+  } finally {
+    await pool.close();
+  }
+}
+-------------------------------------------------
+const sqlConfig = {
+  server: 'localhost\\SQLEXPRESS',
+  database: 'YourDatabaseName',
+  options: {
+    encrypt: false,
+    trustServerCertificate: true
+  },
+  authentication: {
+    type: 'ntlm',
+    options: {
+      domain: '',      // leave blank if local account
+      userName: '',    // current user
+      password: ''     // current user
+    }
+  }
+};
+-------------------------------------------------
+await writeSqlServer(records, sqlConfig);
