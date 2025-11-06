@@ -686,3 +686,14 @@ await writeSqlServer(records, sqlConfig);
 	"endColumn": 18,
 	"origin": "extHost1"
 }]
+--------------------------------------------------------------
+GraphQL Raw Response: {
+  "errors": [
+    {
+      "message": "Index `on_prem_vulns_delta_2025-11-06` not found.",
+      "locations": [
+        {
+          "line": 11,
+          "column": 9
+        }
+      ],
