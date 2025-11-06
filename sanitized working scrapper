@@ -550,3 +550,139 @@ const sqlConfig = {
 };
 -------------------------------------------------
 await writeSqlServer(records, sqlConfig);
+
+
+-------------------------------------------------
+[{
+	"resource": "/c:/Users/amacart1/Desktop/Vulnerability Automation/tests/graphql12.spec.ts",
+	"owner": "typescript",
+	"code": "2339",
+	"severity": 8,
+	"message": "Property 'connect' does not exist on type 'typeof export='.",
+	"source": "ts",
+	"startLineNumber": 135,
+	"startColumn": 13,
+	"endLineNumber": 135,
+	"endColumn": 20,
+	"origin": "extHost1"
+},{
+	"resource": "/c:/Users/amacart1/Desktop/Vulnerability Automation/tests/graphql12.spec.ts",
+	"owner": "typescript",
+	"code": "2339",
+	"severity": 8,
+	"message": "Property 'Transaction' does not exist on type 'typeof export='.",
+	"source": "ts",
+	"startLineNumber": 145,
+	"startColumn": 33,
+	"endLineNumber": 145,
+	"endColumn": 44,
+	"origin": "extHost1"
+},{
+	"resource": "/c:/Users/amacart1/Desktop/Vulnerability Automation/tests/graphql12.spec.ts",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'pool'.",
+	"source": "ts",
+	"startLineNumber": 145,
+	"startColumn": 45,
+	"endLineNumber": 145,
+	"endColumn": 49,
+	"origin": "extHost1"
+},{
+	"resource": "/c:/Users/amacart1/Desktop/Vulnerability Automation/tests/graphql12.spec.ts",
+	"owner": "typescript",
+	"code": "2339",
+	"severity": 8,
+	"message": "Property 'Request' does not exist on type 'typeof export='.",
+	"source": "ts",
+	"startLineNumber": 149,
+	"startColumn": 31,
+	"endLineNumber": 149,
+	"endColumn": 38,
+	"origin": "extHost1"
+},{
+	"resource": "/c:/Users/amacart1/Desktop/Vulnerability Automation/tests/graphql12.spec.ts",
+	"owner": "typescript",
+	"code": "2339",
+	"severity": 8,
+	"message": "Property 'Float' does not exist on type 'typeof export='.",
+	"source": "ts",
+	"startLineNumber": 153,
+	"startColumn": 34,
+	"endLineNumber": 153,
+	"endColumn": 39,
+	"origin": "extHost1"
+},{
+	"resource": "/c:/Users/amacart1/Desktop/Vulnerability Automation/tests/graphql12.spec.ts",
+	"owner": "typescript",
+	"code": "2339",
+	"severity": 8,
+	"message": "Property 'DateTime2' does not exist on type 'typeof export='.",
+	"source": "ts",
+	"startLineNumber": 158,
+	"startColumn": 34,
+	"endLineNumber": 158,
+	"endColumn": 43,
+	"origin": "extHost1"
+},{
+	"resource": "/c:/Users/amacart1/Desktop/Vulnerability Automation/tests/graphql12.spec.ts",
+	"owner": "typescript",
+	"code": "2339",
+	"severity": 8,
+	"message": "Property 'NVarChar' does not exist on type 'typeof export='.",
+	"source": "ts",
+	"startLineNumber": 160,
+	"startColumn": 34,
+	"endLineNumber": 160,
+	"endColumn": 42,
+	"origin": "extHost1"
+},{
+	"resource": "/c:/Users/amacart1/Desktop/Vulnerability Automation/tests/graphql12.spec.ts",
+	"owner": "typescript",
+	"code": "2339",
+	"severity": 8,
+	"message": "Property 'MAX' does not exist on type 'typeof export='.",
+	"source": "ts",
+	"startLineNumber": 160,
+	"startColumn": 47,
+	"endLineNumber": 160,
+	"endColumn": 50,
+	"origin": "extHost1"
+},{
+	"resource": "/c:/Users/amacart1/Desktop/Vulnerability Automation/tests/graphql12.spec.ts",
+	"owner": "typescript",
+	"code": "2304",
+	"severity": 8,
+	"message": "Cannot find name 'pool'.",
+	"source": "ts",
+	"startLineNumber": 171,
+	"startColumn": 11,
+	"endLineNumber": 171,
+	"endColumn": 15,
+	"origin": "extHost1"
+},{
+	"resource": "/c:/Users/amacart1/Desktop/Vulnerability Automation/tests/graphql12.spec.ts",
+	"owner": "typescript",
+	"code": "2367",
+	"severity": 8,
+	"message": "This comparison appears to be unintentional because the types '\"SQL\"' and '\"csv\"' have no overlap.",
+	"source": "ts",
+	"startLineNumber": 290,
+	"startColumn": 7,
+	"endLineNumber": 290,
+	"endColumn": 28,
+	"origin": "extHost1"
+},{
+	"resource": "/c:/Users/amacart1/Desktop/Vulnerability Automation/tests/graphql12.spec.ts",
+	"owner": "typescript",
+	"code": "2588",
+	"severity": 8,
+	"message": "Cannot assign to 'OUTPUT_MODE' because it is a constant.",
+	"source": "ts",
+	"startLineNumber": 297,
+	"startColumn": 7,
+	"endLineNumber": 297,
+	"endColumn": 18,
+	"origin": "extHost1"
+}]
