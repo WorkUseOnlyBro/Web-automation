@@ -1,0 +1,295 @@
+import { test as base, expect, chromium as pwChromium } from '@playwright/test';
+import * as fs from 'fs'; 
+import * as path from 'path';
+import * as sql from 'mssql';
+
+
+// If you want SQL support, install better-SQL3:
+//    npm i -D better-SQL3
+// Then uncomment the next line.
+// @ts-ignore
+// import Database from 'better-SQL3';
+
+/*
+TODO
+make the scan date and finished time stamp dynamic.
+Comment out code. 
+Make documentation. 
+Turn this into a framework that can be generalized to other queries. (function out code)
+Instead of writing to the console have it write to a job and error log.
+*/
+
+// ------------------ Config ------------------
+const OUTPUT_MODE = 'SQL'; // <--- change to 'SQL' to write to a SQL DB
+const CSV_PATH = path.resolve(process.cwd(), 'csvpath.csv');
+const SQL_PATH = path.resolve(process.cwd(), 'vulnerabilities.db');
+// --------------------------------------------
+
+const sqlConfig = {
+  server: 'hostname\\SQLEXPRESS', // or your host\instance
+  database: 'vulnerabilities',
+  options: {
+    encrypt: false,
+    trustServerCertificate: true
+  },
+  authentication: {
+    type: 'ntlm',
+    options: {
+      domain: '',     // or leave blank for local user auth
+      userName: '',             // empty = current user context
+      password: ''              // empty = current user context
+    }
+  }
+};
+
+
+
+// Override default browser fixture to launch custom Chrome
+const test = base.extend({
+  browser: async ({}, use) => {
+    const browser = await pwChromium.launch({
+      headless: false,
+      executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
+    });
+    await use(browser);
+    await browser.close();
+  }
+});
+
+// ---------- utils: data shaping ----------
+function toArrayFromGraphQL(data: any): any[] {
+  if (!data) return [];
+  if (Array.isArray(data)) return data;
+
+  // Common shapes
+  if (Array.isArray(data.hits)) return data.hits;
+  if (Array.isArray(data.items)) return data.items;
+  if (Array.isArray(data.edges)) return data.edges.map((e: any) => e.node ?? e);
+
+  // Fallback: single object -> wrap
+  if (typeof data === 'object') return [data];
+
+  return [];
+}
+
+// Flatten nested objects to dotted keys for CSV
+function flatten(obj: any, prefix = '', out: Record<string, any> = {}) {
+  if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
+    for (const [k, v] of Object.entries(obj)) {
+      const key = prefix ? `${prefix}.${k}` : k;
+      flatten(v, key, out);
+    }
+  } else if (Array.isArray(obj)) {
+    // store arrays as JSON strings
+    out[prefix] = JSON.stringify(obj);
+  } else {
+    out[prefix] = obj;
+  }
+  return out;
+}
+
+// Build CSV content from records of unknown shape
+function buildCsv(records: any[]): string {
+  const flat = records.map(r => flatten(r));
+  const headers = Array.from(
+    new Set(flat.flatMap(obj => Object.keys(obj)))
+  );
+
+  const escape = (val: any) => {
+    if (val === null || val === undefined) return '';
+    const str = String(val);
+    // quote if contains comma, quote, or newline
+    if (/[",\n]/.test(str)) {
+      return `"${str.replace(/"/g, '""')}"`;
+    }
+    return str;
+  };
+
+  const lines: string[] = [];
+  lines.push(headers.join(','));
+  for (const row of flat) {
+    const line = headers.map(h => escape(row[h])).join(',');
+    lines.push(line);
+  }
+  return lines.join('\n');
+}
+
+// ---------- utils: outputs ----------
+function writeCsv(records: any[], filePath: string) {
+  if (!records.length) {
+    console.log('No records to write to CSV.');
+    return;
+  }
+  const csv = buildCsv(records);
+  fs.writeFileSync(filePath, csv, 'utf8');
+  console.log(`✅ CSV written: ${filePath} (${records.length} rows)`);
+}
+
+// ---------- utils: SQL Server output (Windows Auth, structured) ----------
+async function writeSqlServer(records: any[], config: any) {
+  if (!records.length) {
+    console.log('No records to write to SQL Server.');
+    return;
+  }
+
+  const pool = await sql.connect(sqlConfig);
+  const flatRecords = records.map(r => flatten(r)); // reuse your flatten() function
+  const columns = Object.keys(flatRecords[0]);
+  const placeholders = columns.map(c => `@${c}`).join(', ');
+  const insertQuery = `
+    INSERT INTO dbo.vulnerabilities (${columns.join(', ')})
+    VALUES (${placeholders});
+  `;
+
+  try {
+    const transaction = new sql.Transaction(pool);
+    await transaction.begin();
+
+    for (const record of flatRecords) {
+      const request = new sql.Request(transaction);
+      for (const col of columns) {
+        const val = record[col];
+        if (typeof val === 'number') {
+          request.input(col, sql.Float, val);
+        } else if (
+          typeof val === 'string' &&
+          /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(val)
+        ) {
+          request.input(col, sql.DateTime2, val);
+        } else {
+          request.input(col, sql.NVarChar(sql.MAX), val ?? null);
+        }
+      }
+      await request.query(insertQuery);
+    }
+
+    await transaction.commit();
+    console.log(`✅ SQL Server written (${flatRecords.length} rows)`);
+  } catch (err) {
+    console.error('❌ SQL Server write failed:', err);
+  } finally {
+    await pool.close();
+  }
+}
+// ---- Test ----
+test('GraphQL request after login and export results', async ({ browser }) => {
+  test.setTimeout(120_000);
+
+  const context = await browser.newContext();
+  const page = await context.newPage();
+
+  // 1) Go to site and wait for login/app readiness
+  await page.goto('websiteplaceholder.url', { waitUntil: 'domcontentloaded' });
+  await page.waitForLoadState('networkidle');
+
+  // 2) Extract cookie / token
+  const cookies = await context.cookies();
+  const authCookie = cookies.find(c => c.name === 'cookieplaceholder'); // <-- adjust if needed
+  const bearerFromCookie = authCookie?.value;
+
+  const bearerFromLocalStorage = await page.evaluate(() => {
+    const candidates = ['access_token', 'id_token', 'authToken', 'token', 'cookieplaceholder'];
+    for (const k of candidates) {
+      const v = localStorage.getItem(k);
+      if (v && typeof v === 'string' && v.length > 10) return v;
+    }
+    return null;
+  });
+
+  const bearer = bearerFromCookie ?? bearerFromLocalStorage ?? null;
+  if (!bearer) throw new Error('Auth token not found in cookies or localStorage.');
+
+  // 3) Prepare & execute GraphQL query (same-origin fetch in page context so cookies ride along)
+  const endpoint = 'placeholder.com/graphql'; // confirm in DevTools
+  
+  const queryPayload = {
+    operationName: 'opnameplaceholder',
+    variables: {
+      aideId: 'idplaceholder',
+    scanDate: "2025-11-01", //new Date().toISOString().split('T')[0], // e.g. '2025-11-06'
+    status: 'OPEN',
+    finishedTimestamp: 1762449867773, //Date.now(), // Unix timestamp in ms
+      fetchVulnRecordsSQL: true,
+      options: {
+        sort: ['SeverityOrder:asc'],
+        searchValue: '',
+        page: 1,
+        filter: ['AIDEID = "aididplaceholder"', ''],
+        facets: [
+          'placeholder1',
+          'placeholder2',
+          'placeholder3',
+          'placeholder4',
+          'placeholder5',
+          'placeholder6',
+          'placeholder7',
+          'placeholder8',
+          'placeholder9',
+          'placeholder10',
+          'placeholder11'
+        ],
+        attributesToRetrieve: ['*'],
+        matchingStrategy: '',
+        attributesToSearchOn: ['*']
+      }
+    },
+    query: `
+      query queryplaceholder(
+        $aideId: String!,
+        $status: VulnStatus!,
+        $scanDate: String!,
+        $options: VulnOptions,
+        $finishedTimestamp: Float,
+        $fetchVulnRecordsSQL: Boolean,
+        $isTenableManaged: Boolean
+      ) {
+        queryplaceholder(
+          aideId: $aideId
+          status: $status
+          scanDate: $scanDate
+          options: $options
+          finishedTimestamp: $finishedTimestamp
+          fetchVulnRecordsSQL: $fetchVulnRecordsSQL
+          isTenableManaged: $isTenableManaged
+        )
+      }
+    `
+  };
+
+  const graphqlResponse = await page.evaluate(
+    async ({ endpoint, payload, token }) => {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'authorization': `Bearer ${token}`
+        },
+        credentials: 'include',
+        body: JSON.stringify(payload)
+      });
+      const text = await res.text();
+      try {
+        return JSON.parse(text);
+      } catch {
+        return { parseError: true, text, status: res.status };
+      }
+    },
+    { endpoint, payload: queryPayload, token: bearer }
+  );
+
+  console.log('GraphQL Raw Response:', JSON.stringify(graphqlResponse, null, 2));
+
+  // 4) Validate and extract records
+  const data = graphqlResponse?.data?.getOnPremVulnerabilities;
+  expect(data).toBeDefined();
+
+  const records = toArrayFromGraphQL(data);
+  console.log(`Found ${records.length} record(s).`);
+
+  // 5) Export
+
+    writeSqlServer(records, SQL_PATH);
+ 
+
+  await context.close();
+});
