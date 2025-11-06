@@ -267,3 +267,85 @@ test('GraphQL request after login and export results', async ({ browser }) => {
 
   await context.close();
 });
+-------------------------------
+gpt sql
+import sql from 'mssql';
+
+// ---------- utils: SQL Server output (Windows Auth, structured) ----------
+async function writeSqlServer(records: any[], config: any) {
+  if (!records.length) {
+    console.log('No records to write to SQL Server.');
+    return;
+  }
+
+  const pool = await sql.connect(config);
+  const flatRecords = records.map(r => flatten(r)); // reuse your flatten() function
+  const columns = Object.keys(flatRecords[0]);
+  const placeholders = columns.map(c => `@${c}`).join(', ');
+  const insertQuery = `
+    INSERT INTO dbo.vulnerabilities (${columns.join(', ')})
+    VALUES (${placeholders});
+  `;
+
+  try {
+    const transaction = new sql.Transaction(pool);
+    await transaction.begin();
+
+    for (const record of flatRecords) {
+      const request = new sql.Request(transaction);
+      for (const col of columns) {
+        const val = record[col];
+        if (typeof val === 'number') {
+          request.input(col, sql.Float, val);
+        } else if (
+          typeof val === 'string' &&
+          /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(val)
+        ) {
+          request.input(col, sql.DateTime2, val);
+        } else {
+          request.input(col, sql.NVarChar(sql.MAX), val ?? null);
+        }
+      }
+      await request.query(insertQuery);
+    }
+
+    await transaction.commit();
+    console.log(`✅ SQL Server written (${flatRecords.length} rows)`);
+  } catch (err) {
+    console.error('❌ SQL Server write failed:', err);
+  } finally {
+    await pool.close();
+  }
+}
+-------------------------------------------
+calling it
+
+const sqlConfig = {
+  server: 'localhost\\SQLEXPRESS', // or your host\instance
+  database: 'YourDatabaseName',
+  options: {
+    encrypt: false,
+    trustServerCertificate: true
+  },
+  authentication: {
+    type: 'ntlm',
+    options: {
+      domain: 'YOURDOMAIN',     // or leave blank for local user auth
+      userName: '',             // empty = current user context
+      password: ''              // empty = current user context
+    }
+  }
+};
+------------------------------------------------------
+CREATE TABLE dbo.vulnerabilities (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    scan_date DATE NULL,
+    hostname NVARCHAR(255) NULL,
+    ip_address NVARCHAR(100) NULL,
+    severity NVARCHAR(50) NULL,
+    vuln_id NVARCHAR(100) NULL,
+    vuln_name NVARCHAR(500) NULL,
+    description NVARCHAR(MAX) NULL,
+    solution NVARCHAR(MAX) NULL,
+    inserted_at DATETIME2 DEFAULT SYSUTCDATETIME()
+);
