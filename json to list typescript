@@ -1,0 +1,65 @@
+interface ExampleItem {
+  id: number;                     // integer or float
+  name: string;                   // text
+  active: boolean;                // true/false
+  tags: string[];                 // array of strings
+  scores: number[];               // array of numbers
+  metadata: {                     // nested object
+    createdAt: string;            // ISO date string
+    updatedAt: string;
+  };
+  notes?: string | null;          // optional field, can be null
+  data: any;                      // can hold anything (not type-safe)
+  value: unknown;                 // can hold anything (requires checking before use)
+  info: [string, number];         // tuple (fixed-length array with specific types)
+}
+
+// Example JSON
+const jsonData = {
+  group1: [
+    {
+      id: 1,
+      name: "Alice",
+      active: true,
+      tags: ["frontend", "typescript"],
+      scores: [98, 87, 92],
+      metadata: { createdAt: "2025-01-01T10:00:00Z", updatedAt: "2025-11-01T08:00:00Z" },
+      notes: "Good progress",
+      data: { key: "value" },
+      value: 42,
+      info: ["rating", 5]
+    }
+  ],
+  group2: [
+    {
+      id: 2,
+      name: "Bob",
+      active: false,
+      tags: ["backend"],
+      scores: [76, 80],
+      metadata: { createdAt: "2025-02-15T10:00:00Z", updatedAt: "2025-11-05T08:00:00Z" },
+      notes: null,
+      data: [1, 2, 3],
+      value: "mixed type example",
+      info: ["level", 3]
+    }
+  ]
+};
+
+// Flatten and extract all ExampleItem objects
+const list: ExampleItem[] = Object.values(jsonData)
+  .flat()
+  .map(item => ({
+    id: item.id,
+    name: item.name,
+    active: item.active,
+    tags: item.tags,
+    scores: item.scores,
+    metadata: item.metadata,
+    notes: item.notes,
+    data: item.data,
+    value: item.value,
+    info: item.info
+  }));
+
+console.log(list);
