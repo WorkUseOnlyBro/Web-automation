@@ -1,0 +1,64 @@
+import sql from 'mssql';
+
+const config: sql.config = {
+  server: 'localhost\\SQLEXPRESS',
+  database: 'TestDB',
+  options: { encrypt: false, trustServerCertificate: true },
+  authentication: { type: 'ntlm', options: { userName: '', password: '' } }
+};
+
+interface Person {
+  id: number;
+  name: string;
+  department: string;
+  active: boolean;
+  createdAt: Date;
+}
+
+const data: Person[] = [
+  { id: 1, name: 'Alice', department: 'Engineering', active: true, createdAt: new Date() },
+  { id: 2, name: 'Bob', department: 'Finance', active: false, createdAt: new Date() },
+  { id: 3, name: 'Charlie', department: 'IT', active: true, createdAt: new Date() }
+];
+
+async function bulkInsertPeople(list: Person[]) {
+  const pool = await sql.connect(config);
+
+  // Build in-memory table structure
+  const table = new sql.Table('People');
+  table.create = false; // set to true if you want it to create the table automatically
+  table.columns.add('id', sql.Int, { nullable: false });
+  table.columns.add('name', sql.NVarChar(50), { nullable: false });
+  table.columns.add('department', sql.NVarChar(50), { nullable: true });
+  table.columns.add('active', sql.Bit, { nullable: false });
+  table.columns.add('createdAt', sql.DateTime, { nullable: false });
+
+  // Add rows
+  for (const rec of list) {
+    table.rows.add(rec.id, rec.name, rec.department, rec.active, rec.createdAt);
+  }
+
+  try {
+    const request = pool.request();
+    await request.bulk(table); // one efficient call
+    console.log('Bulk inserted', list.length, 'rows.');
+  } finally {
+    await pool.close();
+  }
+}
+
+bulkInsertPeople(data);
+
+------------------------------------------
+/*
+example table
+CREATE TABLE People (
+  id INT PRIMARY KEY,
+  name NVARCHAR(50),
+  department NVARCHAR(50),
+  active BIT,
+  createdAt DATETIME
+);
+
+make sure I set the ID as that egrc id
+*/
